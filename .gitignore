@@ -1,3 +1,10 @@
+
+*.suo
+*.db
+*.ipch
+*.tlog
+*.opendb
+
 # Prerequisites
 *.d
 
