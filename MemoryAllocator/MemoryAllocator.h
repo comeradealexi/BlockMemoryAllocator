@@ -23,10 +23,15 @@ namespace Templated
 		using Size = std::size_t;
 		using Memory = void*;
 		static constexpr Memory kMemoryDefault = nullptr;
-		static constexpr Size kBlockCountSmallestAllocation = 8192;
+		static constexpr Size kBlockCountSmallestAllocation = 1024;
 		static constexpr Size kMinAllocationSizeBytes = 256;
 		static constexpr Size kAlignment = 256;
 
+		static constexpr Size kMaxAllocationSize = 1024 * 1024 * 128;
+		static constexpr Size kMaxAllocationCount = 1;
+
+		//NOTE TO SELF USE SELF DEFINED ARRAYS
+		static constexpr Size kPoolSizes[] = { 1,2,3 };
 	public:
 		Memory Allocate(Size memorySize, Size memoryAlignment)
 		{
@@ -137,9 +142,15 @@ namespace Templated
 			template<typename T>
 			inline void DebugPrint(size_t poolNumber, T& dbgPrint)
 			{
-				dbgPrint << "#" << poolNumber << "  " << (size_t)T_BLOCK_SIZE << "x" << (size_t)T_BLOCK_COUNT << "=" << static_cast<size_t>(T_BLOCK_SIZE * T_BLOCK_COUNT);
 				dbgPrint.precision(4);
-				dbgPrint << "(" << static_cast<float>(T_BLOCK_SIZE * T_BLOCK_COUNT) / 1024.0f / 1024.0f << "mb)" << "\n";
+				dbgPrint << "#" << poolNumber << "  ";
+				dbgPrint << (size_t)T_BLOCK_SIZE;
+				dbgPrint << "(" << static_cast<float>(T_BLOCK_SIZE) / 1024.0f / 1024.0f << "mb)";
+				dbgPrint << "x";
+				dbgPrint << (size_t)T_BLOCK_COUNT;
+				dbgPrint << "=" << static_cast<size_t>(T_BLOCK_SIZE * T_BLOCK_COUNT);
+				dbgPrint << "(" << static_cast<float>(T_BLOCK_SIZE * T_BLOCK_COUNT) / 1024.0f / 1024.0f << "mb)";
+				dbgPrint << "\n";
 
 				dbgPrint << "Pool Count:" << m_pools.size() << "\n";
 				m_nextPool.DebugPrint<T>(poolNumber + 1, dbgPrint);
@@ -183,9 +194,9 @@ namespace Templated
 			std::vector<std::shared_ptr<Pool>> m_pools;
 			T_ALLOCATOR& m_platformAllocator;
 
-			static constexpr size_t kNEXT_BLOCK_SIZE = T_BLOCK_SIZE * 2;
-			static constexpr size_t kNEXT_BLOCK_COUNT = T_BLOCK_COUNT - (T_BLOCK_COUNT / 3);
-			static constexpr bool kLAST_VALID_POOL = kNEXT_BLOCK_COUNT > 32;
+			static constexpr size_t kNEXT_BLOCK_SIZE = T_BLOCK_SIZE / 2;
+			static constexpr size_t kNEXT_BLOCK_COUNT = (T_BLOCK_COUNT * 2);
+			static constexpr bool kLAST_VALID_POOL = kNEXT_BLOCK_SIZE > POOL_ALLOCATOR::kMinAllocationSizeBytes;
 
 			PoolList<POOL_ALLOCATOR, kNEXT_BLOCK_SIZE, kNEXT_BLOCK_COUNT, kLAST_VALID_POOL> m_nextPool;
 		};
@@ -217,7 +228,7 @@ namespace Templated
 		//};
 		
 		T_ALLOCATOR&		m_allocator;
-		PoolList<T_ALLOCATOR, T_ALLOCATOR::kMinAllocationSizeBytes, T_ALLOCATOR::kBlockCountSmallestAllocation, true> m_firstPool;
+		PoolList<T_ALLOCATOR, T_ALLOCATOR::kMaxAllocationSize, T_ALLOCATOR::kMaxAllocationCount, true> m_firstPool;
 		std::mutex			m_mutex;
 	};
 }
