@@ -11,6 +11,15 @@
 
 namespace Templated
 {
+	struct PoolSizeConstructor
+	{
+		constexpr PoolSizeConstructor(size_t poolSize, size_t poolCount) : kPoolSize(poolSize), kPoolCount(poolCount)
+		{
+
+		}
+		const size_t kPoolSize = 0;
+		const size_t kPoolCount = 0;
+	};
 	struct CPPAllocator
 	{
 	public:
@@ -31,7 +40,13 @@ namespace Templated
 		static constexpr Size kMaxAllocationCount = 1;
 
 		//NOTE TO SELF USE SELF DEFINED ARRAYS
-		static constexpr Size kPoolSizes[] = { 1,2,3 };
+		static constexpr PoolSizeConstructor kPoolSizes[] = 
+		{ 
+			{1024*1024		,32},
+			{1024 * 1024 * 2,32},
+
+
+		};
 	public:
 		Memory Allocate(Size memorySize, Size memoryAlignment)
 		{
